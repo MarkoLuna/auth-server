@@ -1,0 +1,172 @@
+{
+	"info": {
+		"_postman_id": "f8603ad7-6a08-49e3-8157-748399c20c39",
+		"name": "AuthServer",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1-GenerateCredentials",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:9096/credentials",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9096",
+					"path": [
+						"credentials"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2-GenerateToken",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:9096/token?grant_type=client_credentials&client_id=75265706&client_secret=ec37295b&scope=all",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9096",
+					"path": [
+						"token"
+					],
+					"query": [
+						{
+							"key": "grant_type",
+							"value": "client_credentials"
+						},
+						{
+							"key": "client_id",
+							"value": "75265706"
+						},
+						{
+							"key": "client_secret",
+							"value": "ec37295b"
+						},
+						{
+							"key": "scope",
+							"value": "all"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3-ProtectedEndpoint",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiI3NTI2NTcwNiIsImV4cCI6MTYzNjc2Nzg3OX0.2ffwnmtWamYz0tnTpqqYImyywWi9CSCtNmv7ly0UkN1uiWmv6nBkQaFtQXmaTSlSbyu6kDS05bMCUUnk3XTN7Q",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:9096/protected",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9096",
+					"path": [
+						"protected"
+					],
+					"query": [
+						{
+							"key": "access_token",
+							"value": "BLTCJ6GNPEKEOQ8VYA3DVG",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "4-GenerateTokenWithClaims",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:9096/tokenWithClaims",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9096",
+					"path": [
+						"tokenWithClaims"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "5-GetClaims",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjM0NTYiLCJleHAiOjE2MzY3NjA4MjQsInN1YiI6IjAwMDAwMCJ9.H4DlPqTZqaHA98F5cADlMh4wzVE5uW-HIXmzAojMmMouRmx2OePUhPj63N4MVlPaH9uNwTFIFeolnrS1UZhstg",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:9096/getClaims",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9096",
+					"path": [
+						"getClaims"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6-ProtectedWithClaimsEndpoint",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjM0NTYiLCJleHAiOjE2MzY3NTQ3NzAsInN1YiI6IjAwMDAwMCJ9.PSze4seiHdVhnMbbRY0NkPvn3N2LbO5Ob28F4OGiddXx-S83ejOjjy6o-urgeTGPmttJ6WJPW8akvURYv0kwaQ",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjM0NTYiLCJleHAiOjE2MzY3NjA4MjQsInN1YiI6IjAwMDAwMCJ9.H4DlPqTZqaHA98F5cADlMh4wzVE5uW-HIXmzAojMmMouRmx2OePUhPj63N4MVlPaH9uNwTFIFeolnrS1UZhstg",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:9096/protectedWithClaims",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9096",
+					"path": [
+						"protectedWithClaims"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
