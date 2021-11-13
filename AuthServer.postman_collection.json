@@ -7,6 +7,23 @@
 	"item": [
 		{
 			"name": "1-GenerateCredentials",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);",
+							"if (jsonData[\"CLIENT_ID\"] != null) {",
+							"    postman.setEnvironmentVariable(\"client_id\", jsonData[\"CLIENT_ID\"]);",
+							"}",
+							"if (jsonData[\"CLIENT_SECRET\"] != null) {",
+							"    postman.setEnvironmentVariable(\"client_secret\", jsonData[\"CLIENT_SECRET\"]);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
 			"request": {
 				"method": "GET",
 				"header": [],
@@ -26,11 +43,28 @@
 		},
 		{
 			"name": "2-GenerateToken",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);",
+							"if (jsonData[\"access_token\"] != null) {",
+							"    postman.setEnvironmentVariable(\"access_token\", jsonData[\"access_token\"]);",
+							"}",
+							"if (jsonData[\"token_type\"] != null) {",
+							"    postman.setEnvironmentVariable(\"token_type\", jsonData[\"token_type\"]);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:9096/token?grant_type=client_credentials&client_id=75265706&client_secret=ec37295b&scope=all",
+					"raw": "http://localhost:9096/token?grant_type=client_credentials&client_id={{client_id}}&client_secret={{client_secret}}&scope=all",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -46,11 +80,11 @@
 						},
 						{
 							"key": "client_id",
-							"value": "75265706"
+							"value": "{{client_id}}"
 						},
 						{
 							"key": "client_secret",
-							"value": "ec37295b"
+							"value": "{{client_secret}}"
 						},
 						{
 							"key": "scope",
@@ -68,7 +102,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiI3NTI2NTcwNiIsImV4cCI6MTYzNjc2Nzg3OX0.2ffwnmtWamYz0tnTpqqYImyywWi9CSCtNmv7ly0UkN1uiWmv6nBkQaFtQXmaTSlSbyu6kDS05bMCUUnk3XTN7Q",
+						"value": "{{token_type}} {{access_token}}",
 						"type": "text"
 					}
 				],
@@ -95,6 +129,23 @@
 		},
 		{
 			"name": "4-GenerateTokenWithClaims",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);",
+							"if (jsonData[\"access_token\"] != null) {",
+							"    postman.setEnvironmentVariable(\"access_token\", jsonData[\"access_token\"]);",
+							"}",
+							"if (jsonData[\"token_type\"] != null) {",
+							"    postman.setEnvironmentVariable(\"token_type\", jsonData[\"token_type\"]);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
 			"request": {
 				"method": "GET",
 				"header": [],
@@ -119,7 +170,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjM0NTYiLCJleHAiOjE2MzY3NjA4MjQsInN1YiI6IjAwMDAwMCJ9.H4DlPqTZqaHA98F5cADlMh4wzVE5uW-HIXmzAojMmMouRmx2OePUhPj63N4MVlPaH9uNwTFIFeolnrS1UZhstg",
+						"value": "{{token_type}} {{access_token}}",
 						"type": "text"
 					}
 				],
@@ -144,13 +195,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjM0NTYiLCJleHAiOjE2MzY3NTQ3NzAsInN1YiI6IjAwMDAwMCJ9.PSze4seiHdVhnMbbRY0NkPvn3N2LbO5Ob28F4OGiddXx-S83ejOjjy6o-urgeTGPmttJ6WJPW8akvURYv0kwaQ",
-						"type": "text",
-						"disabled": true
-					},
-					{
-						"key": "Authorization",
-						"value": "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjM0NTYiLCJleHAiOjE2MzY3NjA4MjQsInN1YiI6IjAwMDAwMCJ9.H4DlPqTZqaHA98F5cADlMh4wzVE5uW-HIXmzAojMmMouRmx2OePUhPj63N4MVlPaH9uNwTFIFeolnrS1UZhstg",
+						"value": "{{token_type}} {{access_token}}",
 						"type": "text"
 					}
 				],
