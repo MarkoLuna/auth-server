@@ -127,13 +127,6 @@ func main() {
 		w.Write(res)
 	})
 
-	http.HandleFunc("/authorize", func(w http.ResponseWriter, r *http.Request) {
-		err := srv.HandleAuthorizeRequest(w, r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		}
-	})
-
 	http.HandleFunc("/credentials", func(w http.ResponseWriter, r *http.Request) {
 		clientId := uuid.New().String()[:8]
 		clientSecret := uuid.New().String()[:8]
