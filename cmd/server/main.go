@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"com.github/MarkoLuna/oauthserver/pkg/dto"
-	"com.github/MarkoLuna/oauthserver/pkg/utils"
+	"github.com/MarkoLuna/oauthserver/pkg/dto"
+	"github.com/MarkoLuna/oauthserver/pkg/utils"
 	"github.com/golang-jwt/jwt"
 
 	"github.com/go-oauth2/oauth2/v4"
@@ -20,6 +21,16 @@ import (
 	"github.com/go-oauth2/oauth2/v4/models"
 	"github.com/go-oauth2/oauth2/v4/server"
 	"github.com/go-oauth2/oauth2/v4/store"
+)
+
+var (
+	signingKey   = utils.GetEnv("OAUTH_SIGNING_KEY", "00000000")
+	clientId     = utils.GetEnv("OAUTH_CLIENT_ID", "c6cece53")
+	clientSecret = utils.GetEnv("OAUTH_CLIENT_SECRET", "f105afff")
+
+	userId       = utils.GetEnv("OAUTH_USER_ID", "000000")
+	userName     = utils.GetEnv("OAUTH_USER_NAME", "user")
+	userPassword = utils.GetEnv("OAUTH_USER_PASSWORD", "secret")
 )
 
 func main() {
@@ -34,10 +45,6 @@ func main() {
 	srv.SetClientInfoHandler(server.ClientFormHandler)
 	manager.SetRefreshTokenCfg(manage.DefaultRefreshTokenCfg)
 
-	clientId := utils.GetEnv("OAUTH_CLIENT_ID", "c6cece53")
-	clientSecret := utils.GetEnv("OAUTH_CLIENT_SECRET", "f105afff")
-	userId := utils.GetEnv("OAUTH_USER_ID", "000000")
-
 	srv.SetInternalErrorHandler(func(err error) (re *errors.Response) {
 		log.Println("Internal Error:", err.Error())
 		return
@@ -47,29 +54,28 @@ func main() {
 		log.Println("Response Error:", re.Error.Error())
 	})
 
-	http.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/oauth/token", func(w http.ResponseWriter, r *http.Request) {
 
-		clientIdReq, err := getSingleRequestParam(r, "client_id")
-		if err != nil {
-			log.Println(err.Error())
-			http.Error(w, "Invalid client id", http.StatusUnauthorized)
+		auth, ok := GetBasicAuth(r)
+		if !ok {
+			http.Error(w, "Unable to find the Authentication", http.StatusUnauthorized)
 			return
 		}
 
-		clientSecretReq, err := getSingleRequestParam(r, "client_secret")
-		if err != nil {
-			log.Println(err.Error())
-			http.Error(w, "Invalid client secret", http.StatusUnauthorized)
+		clientIdReq, clientSecretReq := DecodeBasicAuth(auth)
+		validClientCred, err := IsValidClientCredentials(clientIdReq, clientSecretReq)
+		if !validClientCred || err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		if clientId != clientIdReq {
-			http.Error(w, "Invalid client id", http.StatusUnauthorized)
-			return
-		}
+		r.ParseForm()
+		userNameReq := r.FormValue("username")
+		passwordReq := r.FormValue("password")
 
-		if clientSecret != clientSecretReq {
-			http.Error(w, "Invalid client secret", http.StatusUnauthorized)
+		userValid, err := IsValidUser(userNameReq, passwordReq)
+		if !userValid || err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
@@ -85,7 +91,7 @@ func main() {
 			},
 		}
 
-		gen := generates.NewJWTAccessGenerate("", []byte("00000000"), jwt.SigningMethodHS512)
+		gen := generates.NewJWTAccessGenerate("", []byte(signingKey), jwt.SigningMethodHS512)
 		access, refresh, err := gen.Token(context.Background(), data, true)
 
 		if err != nil {
@@ -120,7 +126,7 @@ func main() {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("parse error")
 			}
-			return []byte("00000000"), nil
+			return []byte(signingKey), nil
 		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -176,7 +182,7 @@ func validateToken(f http.HandlerFunc, srv *server.Server) http.HandlerFunc {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("parse error")
 			}
-			return []byte("00000000"), nil
+			return []byte(signingKey), nil
 		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -193,21 +199,47 @@ func validateToken(f http.HandlerFunc, srv *server.Server) http.HandlerFunc {
 	})
 }
 
-func getSingleRequestParam(r *http.Request, paramName string) (string, error) {
-	params, ok := r.URL.Query()[paramName]
-
-	if !ok || len(params[0]) < 1 {
-		return "", errors.New("Url Param '" + paramName + "' is missing")
+func IsValidUser(userNameReq string, passwordReq string) (bool, error) {
+	if userName != userNameReq {
+		return false, errors.New("Invalid username")
 	}
 
-	return string(params[0]), nil
+	if userPassword != passwordReq {
+		return false, errors.New("Invalid password")
+	}
+
+	return true, nil
+}
+
+func IsValidClientCredentials(client string, password string) (bool, error) {
+
+	if clientId != client {
+		return false, errors.New("Invalid client id")
+	}
+
+	if clientSecret != password {
+		return false, errors.New("Invalid client secret")
+	}
+
+	return true, nil
+}
+
+func DecodeBasicAuth(auth string) (string, string) {
+	authDecoded, _ := base64.StdEncoding.DecodeString(auth)
+	authReq := strings.Split(string(authDecoded), ":")
+
+	return authReq[0], authReq[1]
 }
 
 func GetBearerAuth(r *http.Request) (string, bool) {
-	return GetAuth(r, "Bearer ")
+	return GetAuthHeader(r, "Bearer ")
 }
 
-func GetAuth(r *http.Request, prefix string) (string, bool) {
+func GetBasicAuth(r *http.Request) (string, bool) {
+	return GetAuthHeader(r, "Basic ")
+}
+
+func GetAuthHeader(r *http.Request, prefix string) (string, bool) {
 	auth := r.Header.Get("Authorization")
 	token := ""
 

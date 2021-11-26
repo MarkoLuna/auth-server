@@ -1,4 +1,4 @@
-module com.github/MarkoLuna/oauthserver
+module github.com/MarkoLuna/oauthserver
 
 go 1.17
 

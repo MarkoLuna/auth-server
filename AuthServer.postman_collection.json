@@ -6,8 +6,17 @@
 	},
 	"item": [
 		{
-			"name": "GenerateToken",
+			"name": "Login",
 			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
 				{
 					"listen": "test",
 					"script": {
@@ -25,35 +34,53 @@
 				}
 			],
 			"request": {
-				"method": "GET",
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "f105afff",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "c6cece53",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
 				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "password",
+							"value": "secret",
+							"type": "text"
+						},
+						{
+							"key": "username",
+							"value": "user",
+							"type": "text"
+						},
+						{
+							"key": "grant_type",
+							"value": "password",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
 				"url": {
-					"raw": "http://localhost:9096/token?grant_type=client_credentials&client_id={{client_id}}&client_secret={{client_secret}}&scope=all",
-					"protocol": "http",
+					"raw": "localhost:9096/oauth/token",
 					"host": [
 						"localhost"
 					],
 					"port": "9096",
 					"path": [
+						"oauth",
 						"token"
-					],
-					"query": [
-						{
-							"key": "grant_type",
-							"value": "client_credentials"
-						},
-						{
-							"key": "client_id",
-							"value": "{{client_id}}"
-						},
-						{
-							"key": "client_secret",
-							"value": "{{client_secret}}"
-						},
-						{
-							"key": "scope",
-							"value": "all"
-						}
 					]
 				}
 			},
