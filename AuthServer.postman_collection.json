@@ -6,43 +6,7 @@
 	},
 	"item": [
 		{
-			"name": "1-GenerateCredentials",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"var jsonData = JSON.parse(responseBody);",
-							"if (jsonData[\"CLIENT_ID\"] != null) {",
-							"    postman.setEnvironmentVariable(\"client_id\", jsonData[\"CLIENT_ID\"]);",
-							"}",
-							"if (jsonData[\"CLIENT_SECRET\"] != null) {",
-							"    postman.setEnvironmentVariable(\"client_secret\", jsonData[\"CLIENT_SECRET\"]);",
-							"}"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:9096/credentials",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "9096",
-					"path": [
-						"credentials"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "2-GenerateToken",
+			"name": "GenerateToken",
 			"event": [
 				{
 					"listen": "test",
@@ -96,7 +60,7 @@
 			"response": []
 		},
 		{
-			"name": "3-ProtectedEndpoint",
+			"name": "ProtectedEndpoint",
 			"request": {
 				"method": "GET",
 				"header": [
@@ -128,43 +92,7 @@
 			"response": []
 		},
 		{
-			"name": "4-GenerateTokenWithClaims",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"var jsonData = JSON.parse(responseBody);",
-							"if (jsonData[\"access_token\"] != null) {",
-							"    postman.setEnvironmentVariable(\"access_token\", jsonData[\"access_token\"]);",
-							"}",
-							"if (jsonData[\"token_type\"] != null) {",
-							"    postman.setEnvironmentVariable(\"token_type\", jsonData[\"token_type\"]);",
-							"}"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:9096/tokenWithClaims",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "9096",
-					"path": [
-						"tokenWithClaims"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "5-GetClaims",
+			"name": "GetClaims",
 			"request": {
 				"method": "GET",
 				"header": [
@@ -183,31 +111,6 @@
 					"port": "9096",
 					"path": [
 						"getClaims"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "6-ProtectedWithClaimsEndpoint",
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "{{token_type}} {{access_token}}",
-						"type": "text"
-					}
-				],
-				"url": {
-					"raw": "http://localhost:9096/protectedWithClaims",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "9096",
-					"path": [
-						"protectedWithClaims"
 					]
 				}
 			},

@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"com.github/MarkoLuna/oauthserver/pkg/dto"
+	"com.github/MarkoLuna/oauthserver/pkg/utils"
 	"github.com/golang-jwt/jwt"
-	"github.com/google/uuid"
 
 	"github.com/go-oauth2/oauth2/v4"
 	"github.com/go-oauth2/oauth2/v4/errors"
@@ -29,16 +29,14 @@ func main() {
 	// token memory store
 	manager.MustTokenStorage(store.NewMemoryTokenStore())
 
-	// client memory store
-	clientStore := store.NewClientStore()
-
-	manager.MapClientStorage(clientStore)
-	manager.MapAccessGenerate(generates.NewJWTAccessGenerate("", []byte("00000000"), jwt.SigningMethodHS512))
-
 	srv := server.NewDefaultServer(manager)
 	srv.SetAllowGetAccessRequest(true)
 	srv.SetClientInfoHandler(server.ClientFormHandler)
 	manager.SetRefreshTokenCfg(manage.DefaultRefreshTokenCfg)
+
+	clientId := utils.GetEnv("OAUTH_CLIENT_ID", "c6cece53")
+	clientSecret := utils.GetEnv("OAUTH_CLIENT_SECRET", "f105afff")
+	userId := utils.GetEnv("OAUTH_USER_ID", "000000")
 
 	srv.SetInternalErrorHandler(func(err error) (re *errors.Response) {
 		log.Println("Internal Error:", err.Error())
@@ -50,17 +48,37 @@ func main() {
 	})
 
 	http.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
-		srv.HandleTokenRequest(w, r)
-	})
 
-	http.HandleFunc("/tokenWithClaims", func(w http.ResponseWriter, r *http.Request) {
+		clientIdReq, err := getSingleRequestParam(r, "client_id")
+		if err != nil {
+			log.Println(err.Error())
+			http.Error(w, "Invalid client id", http.StatusUnauthorized)
+			return
+		}
+
+		clientSecretReq, err := getSingleRequestParam(r, "client_secret")
+		if err != nil {
+			log.Println(err.Error())
+			http.Error(w, "Invalid client secret", http.StatusUnauthorized)
+			return
+		}
+
+		if clientId != clientIdReq {
+			http.Error(w, "Invalid client id", http.StatusUnauthorized)
+			return
+		}
+
+		if clientSecret != clientSecretReq {
+			http.Error(w, "Invalid client secret", http.StatusUnauthorized)
+			return
+		}
 
 		data := &oauth2.GenerateBasic{
 			Client: &models.Client{
-				ID:     "123456",
-				Secret: "123456",
+				ID:     clientId,
+				Secret: clientSecret,
 			},
-			UserID: "000000",
+			UserID: userId,
 			TokenInfo: &models.Token{
 				AccessCreateAt:  time.Now(),
 				AccessExpiresIn: time.Second * 120,
@@ -127,46 +145,24 @@ func main() {
 		w.Write(res)
 	})
 
-	http.HandleFunc("/credentials", func(w http.ResponseWriter, r *http.Request) {
-		clientId := uuid.New().String()[:8]
-		clientSecret := uuid.New().String()[:8]
-		err := clientStore.Set(clientId, &models.Client{
-			ID:     clientId,
-			Secret: clientSecret,
-			Domain: "http://localhost:9094",
-		})
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"CLIENT_ID": clientId, "CLIENT_SECRET": clientSecret})
-	})
-
 	http.HandleFunc("/protected", validateToken(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, I'm protected"))
 	}, srv))
 
-	http.HandleFunc("/protectedWithClaims", validateTokenWithClaims(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello, I'm protected with claims"))
-	}, srv))
+	address := Address()
 
-	log.Fatal(http.ListenAndServe(":9096", nil))
+	log.Println("Starting server on:", address)
+	log.Fatal(http.ListenAndServe(address, nil))
+}
+
+func Address() string {
+	port := utils.GetEnv("SERVER_PORT", "9096")
+	host := utils.GetEnv("SERVER_HOST", "0.0.0.0")
+
+	return host + ":" + port
 }
 
 func validateToken(f http.HandlerFunc, srv *server.Server) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := srv.ValidationBearerToken(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-
-		f.ServeHTTP(w, r)
-	})
-}
-
-func validateTokenWithClaims(f http.HandlerFunc, srv *server.Server) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		accessToken, ok := GetBearerAuth(r)
@@ -197,16 +193,26 @@ func validateTokenWithClaims(f http.HandlerFunc, srv *server.Server) http.Handle
 	})
 }
 
-// BearerAuth parse bearer token
+func getSingleRequestParam(r *http.Request, paramName string) (string, error) {
+	params, ok := r.URL.Query()[paramName]
+
+	if !ok || len(params[0]) < 1 {
+		return "", errors.New("Url Param '" + paramName + "' is missing")
+	}
+
+	return string(params[0]), nil
+}
+
 func GetBearerAuth(r *http.Request) (string, bool) {
+	return GetAuth(r, "Bearer ")
+}
+
+func GetAuth(r *http.Request, prefix string) (string, bool) {
 	auth := r.Header.Get("Authorization")
-	prefix := "Bearer "
 	token := ""
 
 	if auth != "" && strings.HasPrefix(auth, prefix) {
 		token = auth[len(prefix):]
-	} else {
-		token = r.FormValue("access_token")
 	}
 
 	return token, token != ""
